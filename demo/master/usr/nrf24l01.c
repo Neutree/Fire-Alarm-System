@@ -99,7 +99,7 @@ void  NRF24L01_Init(void)
 	SPI2_Init(); //初始化SPI
 	NRF24L01_CE_L();          //使能24L01
 	NRF24L01_CSN_H();        //SPI片选取消
-//	EXTI_Config();//配置中断
+	EXTI_Config();//配置中断
 	//清除接收、发送缓冲区、标志
 	NRF24L01_Write_Reg(NRF24L01_FLUSH_RX,0xff);//清除RX FIFO寄存器
 	NRF24L01_Write_Reg(NRF24L01_FLUSH_TX,0xff);//清除TX FIFO寄存器 

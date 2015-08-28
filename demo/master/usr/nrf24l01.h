@@ -9,7 +9,7 @@
 #include "stm32f10x.h"
 #include "delay.h"
 //#include "usart.h"
-//#include "EXTI.h"
+#include "EXTI.h"
 //NRF24L01¼Ä´æÆ÷²Ù×÷ÃüÁî
 #define NRF24L01_READ_REG        0x00  //¶ÁÅäÖÃ¼Ä´æÆ÷,µÍ5Î»Îª¼Ä´æÆ÷µØÖ·
 #define NRF24L01_WRITE_REG       0x20  //Ğ´ÅäÖÃ¼Ä´æÆ÷,µÍ5Î»Îª¼Ä´æÆ÷µØÖ·
