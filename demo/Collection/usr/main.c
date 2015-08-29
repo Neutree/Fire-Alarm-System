@@ -4,7 +4,7 @@
 # include "esp8266.h"
 # include "time.h"
 # include "nrf24l01.h"
-
+# include "sensor.h"
 void GPIO_Init_Config()
 {
 	 GPIO_InitTypeDef GPIO_InitStructure;
@@ -29,7 +29,7 @@ void init()
 	TIM3_Init();
 	
 	setEcho(0);//关闭回显
-	
+	Sensor_Init();
 	NRF24L01_Init();//2.4G无线初始化
 	
 	
@@ -37,7 +37,7 @@ void init()
 }
 
 u8 buf[5];
-u8 dataTxBuffer[10]="oh My god";
+u8 dataTxBuffer[11]="oh My god";
 u8 i;
 int main()
 {
@@ -48,33 +48,17 @@ int main()
 			printf("connect to nrf24l01 success!\n");
 		else
 			printf("connect to nrf24l01 failed!\n");
-		NRF24L01_RX_Mode();
+		NRF24L01_TX_Mode();
 		while(1)
 		{
-			
-	//		printf("%X\t%d\t%d\n",NRF24L01_Read_Reg(NRF24L01_STATUS),0x01&(GPIOB->IDR&1<<11)>>11,NRF24L01_Read_Reg(NRF24L01_CD));
-	//		NRF24L01_Write_Reg(NRF24L01_WRITE_REG+NRF24L01_STATUS,0xff); //清除TX_DS或MAX_RT中断标志
-		//	printf("%x\n",NRF24L01_TxPacket(dataTxBuffer));
-			
-//			NRF24L01_Read_Buf(NRF24L01_RX_ADDR_P0,buf,5); //读出写入的地址 
-//			for(i=0;i<5;++i)
-//			{
-//				printf("%X\t",buf[i]);
-//			}
-//			printf("\n");
-//			if(setEcho(0))//AT 
-//			{
-//				USARTNum=2;
-//				printf("success\n");
-//				
-//			}
-//			else
-//			{
-//				USARTNum=2;
-//				printf("failed\n");
-//			}
-//			delay_s(2);
-		//	NRF24L01_RX_Mode();
+			dataTxBuffer[0]='O';
+			dataTxBuffer[1]='H';
+			NRF24L01_TxPacket(dataTxBuffer);
+			delay_ms(200);
+			dataTxBuffer[0]='A';
+			dataTxBuffer[1]='A';
+			NRF24L01_TxPacket(dataTxBuffer);
+			delay_ms(200);
 		}
 }
 

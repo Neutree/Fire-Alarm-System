@@ -238,6 +238,7 @@ void NRF24L01_RX_Mode(void)
 	NRF24L01_Write_Reg(NRF24L01_WRITE_REG+NRF24L01_RF_SETUP,0x0f);          //设置TX发射参数,0db增益,2Mbps,低噪声增益开启   
 	NRF24L01_Write_Reg(NRF24L01_WRITE_REG+NRF24L01_CONFIG, 0x0f);           //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式 
 	NRF24L01_CE_H();    //CE为高,进入接收模式 
+	EXTI_ON();//开启中断
 	delay_us(135);  //CE要拉高一段时间才进入发送模式  Power Down -> Standby mode:0~1.5ms  Standby modes -> TX/RX mode  0~130us  For start up time see Table 13 at nrf24l01 product specification
 }  
  
@@ -255,6 +256,7 @@ void NRF24L01_TX_Mode(void)
 	NRF24L01_Write_Reg(NRF24L01_WRITE_REG+NRF24L01_RX_PW_P0,NRF24L01_RX_PLOAD_WIDTH);//选择通道0的有效数据宽度    
 	NRF24L01_Write_Reg(NRF24L01_WRITE_REG+NRF24L01_CONFIG,0x0e);    //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式,开启所有中断
 	NRF24L01_CE_H(); //CE为高,10us后启动发送
+	EXTI_OFF();//关闭中断
 	delay_us(135);  //CE要拉高一段时间才进入发送模式  Power Down -> Standby mode:0~1.5ms  Standby modes -> TX/RX mode  0~130us  For start up time see Table 13 at nrf24l01 product specification
 }  
 

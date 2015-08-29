@@ -1,5 +1,6 @@
 #include "stm32f10x_exti.h"
 #include "EXTI.h"
+
 void EXTI_Config()
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -61,11 +62,48 @@ void EXTI_Config()
 
 void EXTI0_IRQHandler(void)
 {
+	u8 flag=0;
+	static u8 flag_before=0;
 	if(EXTI_GetITStatus(EXTI_Line0)!=RESET)
 	{
-		
-		
+		delay_ms(50);
+		flag=GPIO_ReadInputDataBit(SENSOR_LIGHT_GPIO,SENSOR_LIGHT_PIN);
+		if(flag_before!=flag)//status changed 状态改变
+		{
+			if(!flag)
+			{
+				printf("Light intensity\n ");
+			}
+			else
+			{
+				printf("Light Week\n ");
+			}
+			flag_before=flag;//update status 更新状态
+		}	
 		EXTI_ClearITPendingBit(EXTI_Line0);	
+	}
+}
+void EXTI1_IRQHandler(void)
+{
+	u8 flag=0;
+	static u8 flag_before=0;
+	if(EXTI_GetITStatus(EXTI_Line1)!=RESET)
+	{
+		delay_ms(50);
+		flag=GPIO_ReadInputDataBit(SENSOR_MOV_GPIO,SENSOR_MOV_PIN);
+		if(flag_before!=flag)//status changed 状态改变
+		{
+			if(!flag)
+			{
+				printf("Moving\n ");
+			}
+			else
+			{
+				printf("Not Moving\n ");
+			}
+			flag_before=flag;//update status 更新状态
+		}		
+		EXTI_ClearITPendingBit(EXTI_Line1);	
 	}
 }
 //注意：中断线5~15的中断函数如下，与1~4不同
@@ -77,6 +115,8 @@ void EXTI9_5_IRQHandler(void)
 u8 dataBuffer[10];
 void EXTI15_10_IRQHandler(void)
 {
+	u8 flag=0;
+	static u8 flag_before_mov=0,flag_before_fire=0;
 	u8 status=0;
 	USARTNum=2;
 	if(EXTI_GetITStatus(EXTI_Line11)!=RESET)
@@ -88,7 +128,44 @@ void EXTI15_10_IRQHandler(void)
 		{
 				printf("%s\n",dataBuffer);
 		}
+		printf("a\n");
 		EXTI_ClearITPendingBit(EXTI_Line11);	
+	}
+	else if(EXTI_GetITStatus(EXTI_Line(SENSOR_FIRE_PIN_NUM))!=RESET)
+	{
+		delay_ms(50);
+		flag=GPIO_ReadInputDataBit(SENSOR_FIRE_GPIO,SENSOR_FIRE_PIN);
+		if(flag_before_fire!=flag)//status changed 状态改变
+		{
+			if(!flag)
+			{
+				printf("Fire is burning\n ");
+			}
+			else
+			{
+				printf("Fire Back to normal\n ");
+			}
+			flag_before_fire=flag;//update status 更新状态
+		}
+		EXTI_ClearITPendingBit(EXTI_Line15);	
+	}
+	else if(EXTI_GetITStatus(EXTI_Line14)!=RESET)
+	{
+		delay_ms(50);
+		flag=GPIO_ReadInputDataBit(SENSOR_GAS_GPIO,SENSOR_GAS_PIN);
+		if(flag_before_mov!=flag)//status changed 状态改变
+		{
+			if(!flag)
+			{
+				printf("Gas leak\n ");
+			}
+			else
+			{
+				printf("Gas Back to normal\n ");
+			}
+			flag_before_mov=flag;//update status 更新状态
+		}
+		EXTI_ClearITPendingBit(EXTI_Line14);	
 	}
 	
 }
