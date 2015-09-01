@@ -1,5 +1,8 @@
 #include "stm32f10x_exti.h"
 #include "EXTI.h"
+
+
+
 void EXTI_Config()
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -73,22 +76,173 @@ void EXTI9_5_IRQHandler(void)
 {
 	
 }
+//////////////////////////////////////////////////
+///deal with received data
+/////////////////////////////////////////////////
+u8 dataBuffer[6]={0,0,0,0,0,0};
 
-u8 dataBuffer[11]={0,0,0,0,0,0,0,0,0,0,0};
+volatile u8 EXTI_flag=0;
+
+///////////////////////////////////////
+///sensor status
+///bit7~4:status before    bit3~0: status now
+///////////////////////////////////////
+volatile u8 Sensor_Gas_status=0;
+volatile u8 Sensor_Mov_status=0;
+//volatile u8 Sensor_Light_status=0;
+volatile u8 Sensor_Fire_status=0;
+volatile u8 Sensor_Door1_status=0;
+volatile u8 Sensor_Door2_status=0;
+volatile u8 latest_Sensor_detected = 0xff;
 void EXTI15_10_IRQHandler(void)
 {
 	u8 status=0;
+	
 	if(EXTI_GetITStatus(EXTI_Line11)!=RESET)
 	{
 		status=NRF24L01_RxPacket(dataBuffer);
 //		NRF24L01_RX_Mode();//进行下一次接收，否则会保持待机模式
-		NRF24L01_CE_H();//进行下一次接收，否则会保持待机模式
 		if(NRF24L01_RX_OK==status)//接收数据成功
 		{
-				LCD1602_BL_ON();
-				LCD1602_WriteString_At_Pos(0,1,dataBuffer);
+			EXTI_flag=1;
+			Rcv_Message_Deal();
 		}
+		NRF24L01_CE_H();//进行下一次接收，否则会保持待机模式
 		EXTI_ClearITPendingBit(EXTI_Line11);	
 	}
+}
+
+void Rcv_Message_Deal(void)
+{
 	
+//	LCD1602_BL_ON();
+	if(dataBuffer[5]==0x11)//传感器信息
+	{
+		switch(dataBuffer[4])
+		{
+			case SENSOR_GAS_NUMBER:
+				if(dataBuffer[0])
+				{
+//					LCD1602_WriteString_At_Pos(0,1,"STA:GasL  NOW:Y");
+//					printf("Gas leak! \n");
+					Sensor_Gas_status=0x11;
+					latest_Sensor_detected=SENSOR_GAS_NUMBER;
+					printf("Gas leak!\n");
+				}
+				else
+				{
+//					LCD1602_WriteString_At_Pos(9,1," NOW:N ");
+//					printf("Gas normal! \n");
+					Sensor_Gas_status &= 0x10;
+					printf("gas return to normal!\n");
+				}
+				break;
+			case SENSOR_FIRE_NUMBER:
+				if(dataBuffer[0])
+				{
+//					LCD1602_WriteString_At_Pos(0,1,"STA:Flame NOW:Y");
+//					printf("fire burning! \n");
+					Sensor_Fire_status=0x11;
+					latest_Sensor_detected=SENSOR_FIRE_NUMBER;
+					printf("detected flame!\n");
+				}
+				else
+				{
+//					LCD1602_WriteString_At_Pos(9,1," NOW:N ");
+//					printf("no fire now \n");
+					Sensor_Fire_status &= 0x10;
+					printf("flame return to normal\n");
+				}
+				break;
+			case SENSOR_MOV_NUMBER:
+				if(dataBuffer[0])
+				{
+//					LCD1602_WriteString_At_Pos(0,1,"STA:Moved NOW:Y");
+//					printf("moved without open door ! \n");
+					Sensor_Mov_status=0x11;
+					latest_Sensor_detected=SENSOR_MOV_NUMBER;
+					printf("detected Vibration!\n");
+				}
+				else
+				{
+//					LCD1602_WriteString_At_Pos(9,1," NOW:N ");
+//					printf("moved without open door ,and now it is not moving ! \n");
+					Sensor_Mov_status &= 0x10;
+				}
+				break;
+		}
+	}
+	else if(dataBuffer[5]==0x22)//门锁信号
+	{
+		switch(dataBuffer[4])
+		{
+			case 1://door 1
+				if(dataBuffer[0])//open
+				{
+	//				LCD1602_WriteString_At_Pos(7,2,"ON ");
+	//							printf("Door one is open !\n");
+					Sensor_Door1_status=0x11;
+					printf("the first door is open!\n");
+				}
+				else//close
+				{
+	//				LCD1602_WriteString_At_Pos(7,2,"OFF");
+	//							printf("Door one is close !\n");
+					Sensor_Door1_status = 0;
+					printf("the first door is close!\n");
+				}
+				break;
+			case 2: //door2
+				if(dataBuffer[0])//open
+				{
+	//				LCD1602_WriteString_At_Pos(13,2,"ON ");
+	//							printf("Door two is open !\n");
+					Sensor_Door2_status=0x11;
+					printf("the second door is open!\n");
+				}
+				else//close
+				{
+	//				LCD1602_WriteString_At_Pos(13,2,"OFF");
+	//							printf("Door two is close !\n");
+					Sensor_Door2_status = 0;
+					printf("the secomd door is close!\n");
+				}
+				break;
+		}
+	}
+}
+void Sensor_Status_Dis(void)
+{
+	//显示是否有异常状态发生
+	if(latest_Sensor_detected!=0xff)//有非正常动作发生
+	{
+		if(latest_Sensor_detected==SENSOR_MOV_NUMBER)
+		{
+					LCD1602_WriteString_At_Pos(0,1,"  STATUS:Moved  ");
+		}
+		else if(latest_Sensor_detected==SENSOR_FIRE_NUMBER)
+		{
+					LCD1602_WriteString_At_Pos(0,1,"  STATUS:Flame  ");
+		}
+		else if(latest_Sensor_detected==SENSOR_GAS_NUMBER)
+		{
+					LCD1602_WriteString_At_Pos(0,1," STATUS:GasLeak ");
+		}
+	}
+	if(Sensor_Door1_status)
+	{
+		LCD1602_WriteString_At_Pos(7,2,"ON ");
+	}
+	else
+	{
+		LCD1602_WriteString_At_Pos(7,2,"OFF");
+	}
+	if(Sensor_Door2_status)
+	{
+		LCD1602_WriteString_At_Pos(13,2,"ON ");
+	}
+	else
+	{
+		LCD1602_WriteString_At_Pos(13,2,"OFF");
+	}
 }

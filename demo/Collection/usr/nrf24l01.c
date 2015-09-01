@@ -165,7 +165,7 @@ u8 NRF24L01_Write_Byte(u8 reg, u8 pBuf)
 	return status;                  //返回读到的状态值
 }
 
-u8 NRF24L01_Write_Buf(u8 reg, u8 *pBuf, u8 len)
+u8 NRF24L01_Write_Buf(u8 reg, const u8 *pBuf, u8 len)
 {
 	u8 status,u8_ctr;    
 	NRF24L01_CSN_L();                        //使能SPI传输
@@ -177,7 +177,7 @@ u8 NRF24L01_Write_Buf(u8 reg, u8 *pBuf, u8 len)
 }
 
   
-u8 NRF24L01_TxPacket(u8 *txbuf)
+u8 NRF24L01_TxPacket(const u8 *txbuf)
 {
 	u8 sta;
 	u16 Time_out_count=0;

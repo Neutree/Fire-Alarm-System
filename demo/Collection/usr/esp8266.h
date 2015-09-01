@@ -1,24 +1,21 @@
 /**
 *@file    esp8266.h
 *@version 1.0
-*@author  Chen Zhangdi
+*@author  
 *@date    2015-07-27
 *@brief   The definition and function of ESP8266
 *@par Copyright:
 *Copyright© 2015 Neutree
-
+*@bug  not complete yet , but some of them is useful
 *@Description:
 *
 *@history
-  1:
-		Date:2015-07-27
-		Author:Chen Zhangdi
-		Modification:		
+		
 */
 
 #ifndef _ESP8266_H
 #define _ESP8266_H
-//!!!!使用usart,具体使用哪个串口，在 USARTNum 中定义，为u8类型，与usart.h配合使用
+//!!!!使用usart,具体使用哪个串口，在 USARTNum 中定义，为u8类型，与usart.h配合使用  1连接wifi   2连接串口输出
 //!!!!define which usart to use,USARTNum defined in usart.h
 
 
@@ -29,7 +26,7 @@
 
 #define DEFAULT_PATTERN 3
 #define USARTNUMBER 1         //use usart1
-#define DEFAULT_TIMEOUT 50   //unit:100ms
+#define DEFAULT_TIMEOUT 100   //unit:100ms
 #define DEFAULT_TIMEOUT_LONG 1200   //unit:100ms
 #define ESPRECEV_BUFFER USART1Buffer
 
@@ -574,6 +571,14 @@ u8 recvFindAndFilter(char* target, char* begin, char* end, char* data, uint32_t 
      * @return the length of data received actually. 
      */
     uint32_t recvMultipleModeComingmux_id(uint8_t *coming_mux_id, uint8_t *buffer, uint32_t buffer_size, uint32_t timeout);
-		
+	
+	
+	/**
+	*esp8266 initialization function
+	*
+	*
+	*
+	*/
+	u8 esp8266_Init(void);
 		
 #endif    /* #ifndef _ESP8266_H */

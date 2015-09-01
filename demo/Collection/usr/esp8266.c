@@ -1,3 +1,19 @@
+/**
+*@file    esp8266.h
+*@version 1.0
+*@author  
+*@date    2015-07-27
+*@brief   The definition and function of ESP8266
+*@par Copyright:
+*Copyright? 2015 Neutree
+*@bug  not complete yet , but some of them is useful
+*@Description:
+*
+*@history
+		
+*/
+
+
 # include "esp8266.h"
 
 		char data[MAX_QUEUE_LEN]="";//Received data
@@ -16,7 +32,7 @@
      */
     char* recvString(char* target, uint32_t timeout)
 		{
-			u8 i;
+		//	u8 i;
 			char temp[2]={'0','\0'};
 			strcpy(data,"");
 			initTimeCount();//Tnit time counter
@@ -53,7 +69,7 @@
      */
     char* recvString2(char* target1, char* target2, uint32_t timeout)
 		{
-			u8 i;
+//			u8 i;
 			char temp[2]={'0','\0'};
 			strcpy(data,"");
 			initTimeCount();//Tnit time counter
@@ -69,6 +85,9 @@
 				if(strstr(data,target1) || strstr(data,target2))//Find out target data, return, or continue(If timeout permit or return current data)
 					break;
 			}
+//			USARTNum=2;//select usart
+//			printf("time : %d\n",(time_s*10+time_100ms));
+//			USARTNum=1;//select usart
 			return data;
 		}
     
@@ -77,7 +96,7 @@
      */
     char* recvString3(char* target1, char* target2, char* target3, uint32_t timeout )
 		{
-			u8 i;
+//			u8 i;
 			char temp[2]={'0','\0'};
 			strcpy(data,"");
 			initTimeCount();//Tnit time counter
@@ -195,16 +214,16 @@
 			USARTNum=USARTNUMBER;//select usart
 			rx_empty();
 			if(pattern>3||pattern<1){
-        return 0;
-        }
+				return 0;
+			}
 			switch(pattern){
-					case 1:
+					case 3:
 							printf("AT+UART=");
 							break;
 					case 2:
 							printf("AT+UART_CUR=");
 							break;
-					case 3:
+					case 1:
 							printf("AT+UART_DEF=");
 							 break;    
 			}
@@ -230,13 +249,13 @@
 			 switch(pattern)
 			{
 					case 1 :
-							printf("AT+CWMODE_DEF?");
+							printf("AT+CWMODE_DEF?\r\n");
 							break;
 					case 2:
-							printf("AT+CWMODE_CUR?");
+							printf("AT+CWMODE_CUR?\r\n");
 							break;
 					default:
-							printf("AT+CWMODE?");
+							printf("AT+CWMODE?\r\n");
 			}
 			ret = recvFindAndFilter("OK", ":", "\r\n\r\nOK", str_mode,DEFAULT_TIMEOUT); 
 			if (ret) {
@@ -255,7 +274,30 @@
 		}
     u8 sATCWMODE(uint8_t mode,uint8_t pattern)
 		{
-			char* data;
+			USARTNum=USARTNUMBER;//select usart
+			if (!pattern) 
+			{
+					return 0;
+			}
+			rx_empty();
+			 switch(pattern)
+			{
+					case 1:
+							printf("AT+CWMODE_DEF=3\r\n");
+							
+							break;
+					case 2:
+							printf("AT+CWMODE_CUR=%d\r\n",mode);
+							break;
+					default:
+							printf("AT+CWMODE=%d\r\n",mode);
+							break;
+			}
+			return recvFind("OK",DEFAULT_TIMEOUT);
+			
+		}
+    u8 qATCWJAP(char* ssid,uint8_t pattern)
+		{
 			USARTNum=USARTNUMBER;//select usart
 			if (!pattern) 
 			{
@@ -265,40 +307,13 @@
 			 switch(pattern)
 			{
 					case 1 :
-							printf("AT+CWMODE_DEF=");
+							printf("AT+CWJAP_DEF?\r\n");
 							break;
 					case 2:
-							printf("AT+CWMODE_CUR=");
+							printf("AT+CWJAP_CUR?\r\n");
 							break;
 					default:
-							printf("AT+CWMODE=");
-			}
-			printf("%d\r\n",mode);
-			data = recvString2("OK", "no change",DEFAULT_TIMEOUT);
-			if(strstr(data,"OK")||strstr(data,"no change"))
-			{
-				return 1;
-			}
-			return 0;
-			
-		}
-    u8 qATCWJAP(char* ssid,uint8_t pattern)
-		{
-			if (!pattern) 
-			{
-					return 0;
-			}
-			rx_empty();
-			 switch(pattern)
-			{
-					case 1 :
-							printf("AT+CWMODE_DEF?");
-							break;
-					case 2:
-							printf("AT+CWMODE_CUR?");
-							break;
-					default:
-							printf("AT+CWMODE?");
+							printf("AT+CWJAP?\r\n");
 			}
 			ssid = recvString2("OK", "No Ap",DEFAULT_TIMEOUT);
 			if(strstr(ssid,"OK") || strstr(ssid,"No Ap"))
@@ -306,17 +321,122 @@
 			return 0;
 			
 		}
-    u8 sATCWJAP(char* ssid, char* pwd,uint8_t pattern);
+    u8 sATCWJAP(char* ssid, char* pwd,uint8_t pattern)
+	{
+		char* data_temp;
+		USARTNum=USARTNUMBER;//select usart
+		if (!pattern) 
+		{
+				return 0;
+		}
+		rx_empty();
+		 switch(pattern)
+		{
+				case 1 :
+						printf("AT+CWJAP_DEF=");
+						break;
+				case 2:
+						printf("AT+CWJAP_CUR=");
+						break;
+				default:
+						printf("AT+CWJAP=");
+		}
+		printf("\"%s\",\"%s\"\r\n",ssid,pwd);
+//		USARTNum=2;//select usart
+//		printf("join ap :");
+//		USARTNum=1;//select usart
+		data_temp = recvString2("OK", "ERROR",DEFAULT_TIMEOUT);
+		if(strstr(data_temp,"OK"))
+			return 1;
+		else//strstr(ssid,"FAIL")
+			return 0;
+	}
     u8 eATCWLAP(char* list);
     u8 eATCWQAP(void);
     u8 qATCWSAP(char* List,uint8_t pattern); 
-    u8 sATCWSAP(char* ssid, char* pwd, uint8_t chl, uint8_t ecn,uint8_t pattern);
+    u8 sATCWSAP(char* ssid, char* pwd, uint8_t chl, uint8_t ecn,uint8_t pattern)
+	{
+		char* data_temp;
+		USARTNum=USARTNUMBER;//select usart
+		if (!pattern) 
+		{
+				return 0;
+		}
+		rx_empty();
+		 switch(pattern)
+		{
+				case 1 :
+						printf("AT+CWSAP_DEF=");
+						break;
+				case 2:
+						printf("AT+CWSAP_CUR=");
+						break;
+				default:
+						printf("AT+CWSAP=");
+		}
+		printf("\"%s\",\"%s\",%d,%d\r\n",ssid,pwd,chl,ecn);
+//		USARTNum=2;//select usart
+//		printf("set soft ap :");
+//		USARTNum=1;//select usart
+		data_temp = recvString2("OK", "ERROR",DEFAULT_TIMEOUT);
+		if(strstr(data_temp,"OK"))
+			return 1;
+		else//strstr(ssid,"FAIL")
+			return 0;
+	}
     u8 eATCWLIF(char* list);
     u8 qATCWDHCP(char* List,uint8_t pattern); 
-    u8 sATCWDHCP(uint8_t mode, uint8_t en, uint8_t pattern);
+    u8 sATCWDHCP(uint8_t mode, uint8_t en, uint8_t pattern)
+	{
+		char* data_temp;
+		USARTNum=USARTNUMBER;//select usart
+		if (!pattern) 
+		{
+				return 0;
+		}
+		rx_empty();
+		 switch(pattern)
+		{
+				case 1 :
+						printf("AT+CWDHCP_DEF=");
+						break;
+				case 2:
+						printf("AT+CWDHCP_CUR=");
+						break;
+				default:
+						printf("AT+CWDHCP=");
+		}
+		printf("%d,%d\r\n",mode,en);
+		data_temp = recvString2("OK", "ERROR",DEFAULT_TIMEOUT);
+		if(strstr(data_temp,"OK"))
+			return 1;
+		else//strstr(ssid,"FAIL")
+			return 0;
+	}
     u8 eATCWAUTOCONN(uint8_t en);
     u8 qATCIPSTAMAC(char* mac,uint8_t pattern);
-    u8 eATCIPSTAMAC(char* mac,uint8_t pattern);
+    u8 eATCIPSTAMAC(char* mac,uint8_t pattern)
+	{
+		USARTNum=USARTNUMBER;//select usart
+		if (!pattern) 
+		{
+				return 0;
+		}
+		rx_empty();
+		 switch(pattern)
+		{
+				case 1 :
+						printf("AT+CIPSTAMAC_DEF=");
+						break;
+				case 2:
+						printf("AT+CIPSTAMAC_CUR=");
+						break;
+				default:
+						printf("AT+CIPSTAMAC=");
+		}
+		printf("\"%s\"\r\n",mac);
+		return recvFind("OK",DEFAULT_TIMEOUT);
+	}
     u8 qATCIPSTAIP(char* ip,uint8_t pattern);
     u8 eATCIPSTAIP(char* ip,char* gateway,char* netmask,uint8_t pattern);
     u8 qATCIPAP(char* ip,uint8_t pattern);
@@ -334,13 +454,38 @@
     u8 sATCIPSENDMultipleFromFlash(uint8_t mux_id, const uint8_t *buffer, uint32_t len);
     u8 sATCIPCLOSEMulitple(uint8_t mux_id);
     u8 eATCIPCLOSESingle(void);
-    u8 eATCIFSR(char* list);
-    u8 sATCIPMUX(uint8_t mode);
-    u8 sATCIPSERVER(uint8_t mode, uint32_t port);
+    char* eATCIFSR()
+	{
+		USARTNum=USARTNUMBER;//select usart
+		rx_empty();
+		printf("AT+ CIFSR\r\n");
+		return recvString("OK", DEFAULT_TIMEOUT);
+		
+	}
+    u8 sATCIPMUX(uint8_t mode)
+	{
+		USARTNum=USARTNUMBER;//select usart
+		rx_empty();
+		printf("AT+CIPMUX=%d\r\n",mode);
+		return recvFind("OK",DEFAULT_TIMEOUT);
+	}
+    u8 sATCIPSERVER(uint8_t mode, uint32_t port)
+	{
+		USARTNum=USARTNUMBER;//select usart
+		rx_empty();
+		printf("AT+CIPSERVER=%d,%d\r\n",mode,port);
+		return recvFind("OK",DEFAULT_TIMEOUT);
+	}
     u8 sATCIPMODE(uint8_t mode);
     u8 eATSAVETRANSLINK(uint8_t mode,char* ip,uint32_t port);
     u8 eATPING(char* ip);
-    u8 sATCIPSTO(uint32_t timeout);
+    u8 sATCIPSTO(uint32_t timeout)
+	{
+		USARTNum=USARTNUMBER;//select usart
+		rx_empty();
+		printf("AT+CIPSTO=%d\r\n",timeout);
+		return recvFind("OK",DEFAULT_TIMEOUT);
+	}
     /*
      * +IPD,len:data
      * +IPD,id,len:data
@@ -453,10 +598,10 @@
      * @retval false - failure.
      * 
      */
-		 u8 setOprToStation(uint8_t pattern1,uint8_t pattern2)
-		{
-			
-		}
+	 u8 setOprToStation(uint8_t pattern1,uint8_t pattern2)
+	{
+		return sATCWMODE(1,pattern2);
+	}
     
     /**
      * Get the model values list.  
@@ -473,7 +618,10 @@
      * @retval true - success. 
      * @retval false - failure. 
      */
-    u8 setOprToSoftAP(uint8_t pattern1,uint8_t pattern2);
+    u8 setOprToSoftAP(uint8_t pattern1,uint8_t pattern2)
+	{
+		return sATCWMODE(2,pattern2);
+	}
    
     /**
      * Set operation mode to station + softap.  
@@ -483,7 +631,10 @@
      * @retval true - success. 
      * @retval false - failure. 
      */
-    u8 setOprToStationSoftAP(uint8_t pattern1,uint8_t pattern2);
+    u8 setOprToStationSoftAP(uint8_t pattern1,uint8_t pattern2)
+	{
+		return sATCWMODE(3,pattern2);
+	}
     
     /**
      * Get the operation mode.  
@@ -523,7 +674,10 @@
      * @retval false - failure.
      * @note This method will take a couple of seconds. 
      */
-    u8 joinAP(char* ssid, char* pwd,uint8_t pattern);
+    u8 joinAP(char* ssid, char* pwd,uint8_t pattern)
+	{
+		return sATCWJAP(ssid,pwd,pattern);
+	}
     
     /**
      * Leave AP joined before. 
@@ -546,7 +700,10 @@
      * @retval false - failure.
      * @note This method should not be called when station mode. 
      */
-    u8 setSoftAPParam(char* ssid, char* pwd, uint8_t chl , uint8_t ecn,uint8_t pattern);
+    u8 setSoftAPParam(char* ssid, char* pwd, uint8_t chl , uint8_t ecn,uint8_t pattern)
+	{
+		return sATCWSAP(ssid,pwd,chl,ecn,pattern);
+	}
     
     /**
      * get SoftAP parameters. 
@@ -581,7 +738,10 @@
      * @retval true - success.
      * @retval false - failure.
      */
-     u8 setDHCP(uint8_t mode, uint8_t en, uint8_t pattern);
+     u8 setDHCP(uint8_t mode, uint8_t en, uint8_t pattern)
+	 {
+		 return sATCWDHCP(mode,en,pattern);
+	 }
      
      /**
      * make boot automatically connected. 
@@ -606,7 +766,11 @@
      * @retval true - success.
      * @retval false - failure.
      */
-     u8 setStationMac(char* mac,uint8_t pattern);
+     u8 setStationMac(char* mac,uint8_t pattern)
+	 {
+		 
+		 return eATCIPSTAMAC(mac,pattern);
+	 }
      
      /**
      * Get the station's IP. 
@@ -686,7 +850,10 @@
      * @retval true - success.
      * @retval false - failure.
      */
-    u8 enableMUX(void);
+    u8 enableMUX(void)
+	{
+		return sATCIPMUX(1);
+	}
     
     /**
      * Disable IP MUX(single connection mode). 
@@ -696,7 +863,10 @@
      * @retval true - success.
      * @retval false - failure.
      */
-    u8 disableMUX(void);
+    u8 disableMUX(void)
+	{
+		return sATCIPMUX(0);
+	}
     
     /**
      * Create TCP connection in single mode. 
@@ -781,7 +951,10 @@
      * @retval true - success.
      * @retval false - failure.
      */
-    u8 setTCPServerTimeout(uint32_t timeout);
+    u8 setTCPServerTimeout(uint32_t timeout)
+	{
+		return sATCIPSTO(timeout);
+	}
     
     /**
      * Start TCP Server(Only in multiple mode). 
@@ -798,7 +971,10 @@
      * @see uint32_t recv(uint8_t *coming_mux_id, uint8_t *buffer, uint32_t len, uint32_t timeout);
      * @see u8 releaseTCP(uint8_t mux_id);
      */
-    u8 startTCPServer(uint32_t port);
+    u8 startTCPServer(uint32_t port)
+	{
+		return sATCIPSERVER(1,port);
+	}
 
     /**
      * Stop TCP Server(Only in multiple mode). 
@@ -931,8 +1107,49 @@
 			return 0;
 		}
 		
-		
-		
+	/**
+	*
+	*
+	*
+	*
+	*/
+	u8 esp8266_Init(void)
+	{
+		if(kick())//检测到esp8266
+		{
+			setEcho(0);//关闭回显
+		}
+		else
+		{
+			USARTNum=2;//select usart
+			printf("can not detected esp8266!\n");
+			return 0;
+		}
+		USARTNum=2;
+		printf("now usart init...\n");
+		setUart(115200,1);//set baud rate to 115200 definition
+		USARTNum=2;
+		printf("usart init success, now mode init...\n");
+		setOprToStationSoftAP(1,1);//set to station & soft ap mode  definition
+		USARTNum=2;
+		printf("mode init success, now join ap ...\n");
+		setStationMac("12:08:07:72:07:01",1);//set station mac address
+		setDHCP(2,1,1);//enable softap and station DHCP
+		if(!joinAP("Neutree","2.4G1208077207",1))//join ap 
+		{
+			printf("join ap failed just now!\n");
+		}
+		USARTNum=2;
+		printf("join ap success, now setting softap...\n");
+		setSoftAPParam("LibLock1","123456789",5,3,1);//set station param
+		enableMUX();//enable Mux  允许多连接
+		startTCPServer(345);// config server port
+		setTCPServerTimeout(500);//set time out (s)  设置超时自动断开连接时间  单位：s（秒）
+		USARTNum=2;
+		printf("Wifi Configuration success!\n");
+		InitQueue(&USART1Buffer);//清空缓冲区，等待用户数据到来
+		return 1;
+	}
 		
 		
 	

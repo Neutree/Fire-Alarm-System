@@ -442,6 +442,11 @@
               <FileType>1</FileType>
               <FilePath>..\usr\EXTI.c</FilePath>
             </File>
+            <File>
+              <FileName>sensor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\usr\sensor.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

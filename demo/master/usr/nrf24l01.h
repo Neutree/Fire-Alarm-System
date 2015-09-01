@@ -66,8 +66,8 @@
 //24L01发送接收数据宽度定义
 #define NRF24L01_TX_ADR_WIDTH    5   //5字节的地址宽度
 #define NRF24L01_RX_ADR_WIDTH    5   //5字节的地址宽度
-#define NRF24L01_TX_PLOAD_WIDTH  10  //32字节的用户数据宽度
-#define NRF24L01_RX_PLOAD_WIDTH  10  //32字节的用户数据宽度
+#define NRF24L01_TX_PLOAD_WIDTH  6  //32字节的用户数据宽度
+#define NRF24L01_RX_PLOAD_WIDTH  6  //32字节的用户数据宽度
 
 void NRF24L01_Init(void);//初始化
 void NRF24L01_RX_Mode(void);//配置为接收模式

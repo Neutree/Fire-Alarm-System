@@ -495,6 +495,11 @@
               <FileType>1</FileType>
               <FilePath>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\1.1.0\Device\StdPeriph_Driver\src\stm32f10x_tim.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f10x_exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\1.1.0\Device\StdPeriph_Driver\src\stm32f10x_exti.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
@@ -518,6 +523,12 @@
       </component>
       <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS Device">
         <package name="STM32F1xx_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.0.5"/>
+        <targetInfos>
+          <targetInfo name="master"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="EXTI" Cvendor="Keil" Cversion="3.5.0" condition="STM32F1 STDPERIPH">
+        <package name="STM32F1xx_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.1.0"/>
         <targetInfos>
           <targetInfo name="master"/>
         </targetInfos>

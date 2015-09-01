@@ -1,6 +1,16 @@
 #include "stm32f10x_exti.h"
 #include "EXTI.h"
 
+///控制端和检测端通信协议   六个字节  高位~低位分别为：5:数据类型 （-0x11:传感器 -0x22:门锁信号 ） 4: 编号（传感器编号或者是门锁信号） 3~0:数据区域
+const u8 sendMessage_GAS0[6]={0,0,0,0,SENSOR_GAS_NUMBER,0x11};
+const u8 sendMessage_GAS1[6]={1,0,0,0,SENSOR_GAS_NUMBER,0x11};
+const u8 sendMessage_FIRE0[6]={0,0,0,0,SENSOR_FIRE_NUMBER,0x11};
+const u8 sendMessage_FIRE1[6]={1,0,0,0,SENSOR_FIRE_NUMBER,0x11};
+const u8 sendMessage_LIGHT0[6]={0,0,0,0,SENSOR_LIGHT_NUMBER,0x11};
+const u8 sendMessage_LIGHT1[6]={1,0,0,0,SENSOR_LIGHT_NUMBER,0x11};
+const u8 sendMessage_MOV0[6]={0,0,0,0,SENSOR_MOV_NUMBER,0x11};
+const u8 sendMessage_MOV1[6]={1,0,0,0,SENSOR_MOV_NUMBER,0x11};
+
 void EXTI_Config()
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -63,7 +73,7 @@ void EXTI_Config()
 void EXTI0_IRQHandler(void)
 {
 	u8 flag=0;
-	static u8 flag_before=0;
+	static u8 flag_before=1;
 	if(EXTI_GetITStatus(EXTI_Line0)!=RESET)
 	{
 		delay_ms(50);
@@ -72,11 +82,14 @@ void EXTI0_IRQHandler(void)
 		{
 			if(!flag)
 			{
-				printf("Light intensity\n ");
+//				printf("Light intensity\n ");
+//				NRF24L01_TxPacket(sendMessage_LIGHT1);
 			}
 			else
 			{
-				printf("Light Week\n ");
+//				printf("Light Week\n ");
+//				NRF24L01_TxPacket(sendMessage_LIGHT0);
+				
 			}
 			flag_before=flag;//update status 更新状态
 		}	
@@ -86,20 +99,22 @@ void EXTI0_IRQHandler(void)
 void EXTI1_IRQHandler(void)
 {
 	u8 flag=0;
-	static u8 flag_before=0;
+	static u8 flag_before=1;
 	if(EXTI_GetITStatus(EXTI_Line1)!=RESET)
 	{
-		delay_ms(50);
+		delay_ms(10);
 		flag=GPIO_ReadInputDataBit(SENSOR_MOV_GPIO,SENSOR_MOV_PIN);
 		if(flag_before!=flag)//status changed 状态改变
 		{
 			if(!flag)
 			{
 				printf("Moving\n ");
+				NRF24L01_TxPacket(sendMessage_MOV1);
 			}
 			else
 			{
 				printf("Not Moving\n ");
+				NRF24L01_TxPacket(sendMessage_MOV0);
 			}
 			flag_before=flag;//update status 更新状态
 		}		
@@ -116,7 +131,7 @@ u8 dataBuffer[10];
 void EXTI15_10_IRQHandler(void)
 {
 	u8 flag=0;
-	static u8 flag_before_mov=0,flag_before_fire=0;
+	static u8 flag_before_mov=1,flag_before_fire=1;
 	u8 status=0;
 	USARTNum=2;
 	if(EXTI_GetITStatus(EXTI_Line11)!=RESET)
@@ -140,10 +155,13 @@ void EXTI15_10_IRQHandler(void)
 			if(!flag)
 			{
 				printf("Fire is burning\n ");
+
+				NRF24L01_TxPacket(sendMessage_FIRE1);
 			}
 			else
 			{
 				printf("Fire Back to normal\n ");
+				NRF24L01_TxPacket(sendMessage_FIRE0);
 			}
 			flag_before_fire=flag;//update status 更新状态
 		}
@@ -158,10 +176,12 @@ void EXTI15_10_IRQHandler(void)
 			if(!flag)
 			{
 				printf("Gas leak\n ");
+				NRF24L01_TxPacket(sendMessage_GAS1);
 			}
 			else
 			{
 				printf("Gas Back to normal\n ");
+				NRF24L01_TxPacket(sendMessage_GAS0);
 			}
 			flag_before_mov=flag;//update status 更新状态
 		}

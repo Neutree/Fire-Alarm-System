@@ -405,13 +405,8 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>usr</GroupName>
+          <GroupName>bsp</GroupName>
           <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\usr\main.c</FilePath>
-            </File>
             <File>
               <FileName>delay.c</FileName>
               <FileType>1</FileType>
@@ -446,6 +441,16 @@
               <FileName>sensor.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\usr\sensor.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>app</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\usr\main.c</FilePath>
             </File>
           </Files>
         </Group>
