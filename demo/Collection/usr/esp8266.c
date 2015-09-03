@@ -1115,6 +1115,8 @@
 	*/
 	u8 esp8266_Init(void)
 	{
+		char* dataTemp;
+		u16 timeOut=0;
 		if(kick())//检测到esp8266
 		{
 			setEcho(0);//关闭回显
@@ -1126,7 +1128,7 @@
 			return 0;
 		}
 		USARTNum=2;
-		printf("now usart init...\n");
+		printf("now esp8266 usart init...\n");
 		setUart(115200,1);//set baud rate to 115200 definition
 		USARTNum=2;
 		printf("usart init success, now mode init...\n");
@@ -1141,11 +1143,29 @@
 		}
 		USARTNum=2;
 		printf("join ap success, now setting softap...\n");
+		
 		setSoftAPParam("LibLock1","123456789",5,3,1);//set station param
 		enableMUX();//enable Mux  允许多连接
 		startTCPServer(345);// config server port
-		setTCPServerTimeout(500);//set time out (s)  设置超时自动断开连接时间  单位：s（秒）
+		setTCPServerTimeout(60);//set time out (s)  设置超时自动断开连接时间  单位：s（秒）
 		USARTNum=2;
+		printf("set soft ap success, now check ip address...\n");
+		
+		USARTNum=USARTNUMBER;//select usart
+		rx_empty();
+		printf("AT+CIFSR\r\n");
+		USARTNum=2;
+		while(1)
+		{
+			++timeOut;
+			if(timeOut>=65535)
+				break;
+			while(GetQueueSize(&ESPRECEV_BUFFER)>0)
+			{
+				printf("%c",DelQueue(&ESPRECEV_BUFFER));
+			}
+		}	
+		printf("check ip address success...\n");		
 		printf("Wifi Configuration success!\n");
 		InitQueue(&USART1Buffer);//清空缓冲区，等待用户数据到来
 		return 1;

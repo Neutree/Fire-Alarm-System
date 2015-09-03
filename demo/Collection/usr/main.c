@@ -43,15 +43,13 @@ void init()
 	
 }
 
-const u8 sendMessage_GAS00[6]={0,0,0,0,1,0x22};
-const u8 sendMessage_GAS11[6]={1,0,0,0,1,0x22};
-const u8 sendMessage_GAS000[6]={0,0,0,0,2,0x22};
-const u8 sendMessage_GAS111[6]={1,0,0,0,2,0x22};
+u8 sendMessage_Door_Info[6]={0,0,0,0,1,0x22};//门锁信息格式，高位~低位：-5:0x22 代表门锁信息  -4：门锁编号  -3~0:需要发送的信息（状态信息）
+u8 Door_Status[2]={0,0};//门状态记录
 char dataTemp[MAX_QUEUE_LEN];//存放临时数据（接收用户传输过来的数据）
 
 
-const char FirstLockSecret[6]={1,2,3,4,5,6};
-const char SecondLockSecret[6]={6,5,4,3,2,1};
+const char FirstLockSecret[6]={'1','2','3','4','5','6'};
+const char SecondLockSecret[6]={'6','5','4','3','2','1'};
 
 #define UNLOCK_FIRST_DOOR()    GPIO_SetBits(GPIOB, GPIO_Pin_8)
 #define LOCK_FIRST_DOOR()      GPIO_ResetBits(GPIOB, GPIO_Pin_8)
@@ -90,18 +88,44 @@ void Data_Open_Door_Cope(void)
 							{
 								if(FirstLockSecret[0]==dataTemp[i+6] && FirstLockSecret[1]==dataTemp[i+7] && FirstLockSecret[2]==dataTemp[i+8] && FirstLockSecret[3]==dataTemp[i+9] && FirstLockSecret[4]==dataTemp[i+10] && FirstLockSecret[5]==dataTemp[i+11])
 								{
-									UNLOCK_FIRST_DOOR();
-									delay_ms(500);
-									LOCK_FIRST_DOOR();
+									initTimeCount();//超时初始化
+									sendMessage_Door_Info[0]=1;//状态信息 3表示非法尝试开启
+									sendMessage_Door_Info[4]=1;//门锁编号为1
+									UNLOCK_FIRST_DOOR();//开门
+									NRF24L01_TX_Mode();//发送模式
+									NRF24L01_TxPacket(sendMessage_Door_Info);//向监控端发送信息
+									Door_Status[0]=1;
+								}
+								else//密码错误
+								{
+									sendMessage_Door_Info[0]=3;//状态信息 3表示非法尝试开启
+									sendMessage_Door_Info[4]=1;//门锁编号为1
+									LOCK_FIRST_DOOR();//关门
+									NRF24L01_TX_Mode();//发送模式
+									NRF24L01_TxPacket(sendMessage_Door_Info);//向监控端发送信息
+									Door_Status[0]=0;
 								}
 							}
 							else if((((u16)(dataTemp[i+4]<<8))|dataTemp[i+5]) ==2)//第二道锁
 							{
 								if(SecondLockSecret[0]==dataTemp[i+6] && SecondLockSecret[1]==dataTemp[i+7] && SecondLockSecret[2]==dataTemp[i+8] && SecondLockSecret[3]==dataTemp[i+9] && SecondLockSecret[4]==dataTemp[i+10] && SecondLockSecret[5]==dataTemp[i+11])
 								{
-									UNLOCK_SECOND_DOOR();
-									delay_ms(500);
+									initTimeCount();//超时初始化
+									sendMessage_Door_Info[0]=1;//状态信息 3表示非法尝试开启
+									sendMessage_Door_Info[4]=2;//门锁编号为2
+									UNLOCK_SECOND_DOOR();//开门
+									NRF24L01_TX_Mode();//发送模式
+									NRF24L01_TxPacket(sendMessage_Door_Info);//向监控端发送信息
+									Door_Status[1]=1;
+								}
+								else//密码错误
+								{
+									sendMessage_Door_Info[0]=3;//状态信息 3表示非法尝试开启
+									sendMessage_Door_Info[4]=2;//门锁编号为2
 									LOCK_SECOND_DOOR();
+									NRF24L01_TX_Mode();
+									NRF24L01_TxPacket(sendMessage_Door_Info);
+									Door_Status[1]=1;
 								}
 							}
 						}
@@ -177,6 +201,25 @@ int main()
 		while(1)
 		{
 			Data_Open_Door_Detect();
+			//门状态检查，若超时，自动关闭
+			if(Door_Status[0]||Door_Status[1])//有门开着
+			{
+				if(time_s>60)
+				{					
+					LOCK_SECOND_DOOR();
+					LOCK_FIRST_DOOR();//关门
+					Door_Status[0]=0;
+					Door_Status[1]=0;
+					sendMessage_Door_Info[0]=2;//状态信息 2表示关闭
+					sendMessage_Door_Info[4]=1;//门锁编号为1
+					NRF24L01_TX_Mode();//发送模式
+					NRF24L01_TxPacket(sendMessage_Door_Info);//向监控端发送信息
+					sendMessage_Door_Info[0]=2;//状态信息 2表示关闭
+					sendMessage_Door_Info[4]=2;//门锁编号为2
+					NRF24L01_TX_Mode();//发送模式
+					NRF24L01_TxPacket(sendMessage_Door_Info);//向监控端发送信息
+				}
+			}
 		}
 }
 

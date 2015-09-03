@@ -177,35 +177,45 @@ void Rcv_Message_Deal(void)
 		switch(dataBuffer[4])
 		{
 			case 1://door 1
-				if(dataBuffer[0])//open
+				if(dataBuffer[0]==1)//open
 				{
 	//				LCD1602_WriteString_At_Pos(7,2,"ON ");
 	//							printf("Door one is open !\n");
 					Sensor_Door1_status=0x11;
 					printf("the first door is open!\n");
 				}
-				else//close
+				else if(dataBuffer[0]==2)//close
 				{
 	//				LCD1602_WriteString_At_Pos(7,2,"OFF");
 	//							printf("Door one is close !\n");
 					Sensor_Door1_status = 0;
 					printf("the first door is close!\n");
 				}
+				else if(dataBuffer[0]==3)
+				{
+					Sensor_Door1_status=0x13;
+					printf("Some one tye to open door1, but failed!\n");
+				}
 				break;
 			case 2: //door2
-				if(dataBuffer[0])//open
+				if(dataBuffer[0]==1)//open
 				{
 	//				LCD1602_WriteString_At_Pos(13,2,"ON ");
 	//							printf("Door two is open !\n");
 					Sensor_Door2_status=0x11;
 					printf("the second door is open!\n");
 				}
-				else//close
+				else if(dataBuffer[0]==2)//close
 				{
 	//				LCD1602_WriteString_At_Pos(13,2,"OFF");
 	//							printf("Door two is close !\n");
 					Sensor_Door2_status = 0;
-					printf("the secomd door is close!\n");
+					printf("the second door is close!\n");
+				}
+				else if(dataBuffer[0]==3)
+				{
+					Sensor_Door2_status=0x13;
+					printf("Some one tye to open door2, but failed!\n");
 				}
 				break;
 		}
